@@ -1,5 +1,6 @@
 <!doctype html>
-<!-- 파일명: index.html | @version 1.1.0 -->
+<!-- 파일명: index.html | @version 1.2.0 -->
+<!-- v1.2.0 «다음 차례»(코트 비는 대로) · 📺 TV 모드 — 코트 화면과 시드별 순위를 10초마다 넘긴다 (?tv=1 로 바로 열기, 화면을 누르면 전체 화면) -->
 <!-- v1.1.0 장난 막기 — 심판 화면은 코트 열쇠(&k=)가 든 QR 로만, 한 경기는 처음 누른 기기 하나만 심판, 선생님이 받았는지(✓ 받음) 표시·못 받았으면 다시 보내기,
      관람 폴링은 폰 8초·TV 4초 + 흩기, 끊기면 점점 길게 쉬었다 다시 -->
 <!-- v1.0.0 짝순환경기 관람·심판 화면 — 구글 밖(GitHub Pages)에 두어 학생 구글 계정(만 13세 미만 차단)과 상관없이 열린다.
@@ -99,6 +100,19 @@ td.nm{text-align:left;font-weight:700}
 .next{background:#fff;border-radius:14px;padding:10px 14px;font-size:14px;color:var(--g500);font-weight:700}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--g900);color:#fff;padding:11px 18px;border-radius:999px;font-weight:700;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw;text-align:center}
 .toast.show{opacity:1}
+.qn{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--g100);font-size:14px;font-weight:600}.qn:first-of-type{border-top:none}.qn b{color:var(--primary);min-width:18px}.qn i{font-style:normal;color:var(--g400);font-size:12px}
+.tvbtn{position:fixed;right:12px;bottom:12px;border:none;border-radius:999px;background:var(--g900);color:#fff;font-weight:800;font-size:14px;padding:10px 16px;font-family:var(--font);cursor:pointer}
+.tv{position:fixed;inset:0;background:#0f1216;color:#fff;display:flex;flex-direction:column;padding:2.2vh 3vw;overflow:hidden}
+.tv .th{display:flex;align-items:baseline;gap:18px;margin-bottom:1.8vh}.tv .th b{font-size:4.6vh;font-weight:900}.tv .th span{font-size:2.6vh;color:#9aa3ad;font-weight:600}
+.tv .tx{margin-left:auto;background:none;border:1px solid #3a424c;color:#9aa3ad;border-radius:999px;font-size:1.9vh;padding:.5vh 1.4vh;cursor:pointer;font-family:var(--font)}
+.tv .tb{flex:1;min-height:0;display:flex;flex-direction:column;gap:1.1vh}
+.tv .rk{flex:1;min-height:0;max-height:11.5vh;display:flex;align-items:center;gap:2vw;background:#1a1f26;border-radius:1.6vh;padding:0 2.4vw;font-weight:800}
+.tv .rk .no{font-size:5vh;width:6vw;color:#7aa7ff;font-variant-numeric:tabular-nums}.tv .rk.r1 .no{color:#ffd24a}.tv .rk.r2 .no{color:#cfd6df}.tv .rk.r3 .no{color:#e0a26a}
+.tv .rk .nm{flex:1;min-width:0;font-size:5vh;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tv .rk .st{font-size:3.4vh;color:#9aa3ad;font-variant-numeric:tabular-nums}.tv .rk .st b{color:#fff;font-size:4.4vh}
+.tv .tc{flex:1;min-height:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(30vw,1fr));gap:1.6vh;align-content:center}
+.tv .cc{background:#1a1f26;border-radius:1.6vh;padding:2vh 2vw}.tv .cc .ct{font-size:2.8vh;font-weight:800;color:#9aa3ad;margin-bottom:1.2vh}
+.tv .cc .ln{display:flex;align-items:center;gap:1.4vw;font-size:4.2vh;font-weight:800;padding:.6vh 0}.tv .cc .ln span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tv .cc .ln b{font-size:6vh;font-variant-numeric:tabular-nums}.tv .cc .ln.w b{color:#ffd24a}
+.tv .dots{display:flex;gap:1vh;justify-content:center;margin-top:1.4vh}.tv .dots i{width:1.1vh;height:1.1vh;border-radius:50%;background:#3a424c}.tv .dots i.on{background:#fff}
 @media (prefers-reduced-motion:reduce){.toast{transition:none}}
 </style>
 </head>
@@ -187,9 +201,57 @@ function renderViewer(data){
   const table = tb.length ? '<table><tr><th>#</th><th style="text-align:left">선수</th><th>승</th><th>무</th><th>패</th><th>득실</th></tr>' +
     tb.map((r, i) => '<tr><td>' + (i + 1) + '</td><td class="nm">' + esc(r.n) + '</td><td>' + r.w + '</td><td>' + r.d + '</td><td>' + r.l + '</td><td>' + (r.g > 0 ? '+' : '') + r.g + '</td></tr>').join('') + '</table>'
     : '<div class="empty">저장된 경기가 생기면 여기에 쌓입니다</div>';
+  const nextQ = (st.q || []).length ? '<div class="card"><h3>다음 차례</h3>' + st.q.map((g, i) => '<div class="qn"><b>' + (i + 1) + '</b><span>' + (g.t || []).map(t => (t || []).filter(Boolean).map(p => esc(p.n)).join('·')).join(' <i>vs</i> ') + '</span></div>').join('') + '</div>' : '';
   const wait = (st.wait || []).length ? '<div class="wl">' + st.wait.map(p => '<span>' + esc((p.s || '') + ' ' + p.n) + '</span>').join('') + '</div>' : '<div class="empty">없음</div>';
-  app.innerHTML = head(st, data) + '<div class="vmain"><div class="courts">' + courts + '</div><div class="side">' +
-    '<div class="card"><h3>전적</h3>' + table + '</div><div class="card"><h3>대기 (' + (st.wait || []).length + '명)</h3>' + wait + '</div></div></div>';
+  app.innerHTML = head(st, data) + '<div class="vmain"><div class="courts">' + courts + '</div><div class="side">' + nextQ +
+    '<div class="card"><h3>전적</h3>' + table + '</div><div class="card"><h3>대기 (' + (st.wait || []).length + '명)</h3>' + wait + '</div></div></div>' +
+    '<button class="tvbtn" id="tvOn">📺 TV 모드</button>';
+  document.getElementById('tvOn').onclick = tvOn;
+}
+
+/* ───────── TV 모드 — 코트 화면과 시드별 순위를 10초마다 넘긴다 ───────── */
+let TV = Q.get('tv') === '1', tvI = 0, tvT = 0;
+const TV_ROWS = 7;
+function tvPages(st, live){
+  const pages = [];
+  if ((st.courts || []).length) pages.push({ kind: 'courts', title: st.round || '지금 경기' });
+  const groups = {};
+  (st.table || []).forEach(r => { const k = r.sd || ''; (groups[k] = groups[k] || []).push(r); });
+  Object.keys(groups).sort().forEach(k => {
+    const list = groups[k];
+    for (let i = 0; i < list.length; i += TV_ROWS) pages.push({ kind: 'rank', title: (k ? k + ' 시드 ' : '') + '순위', from: i, list: list.slice(i, i + TV_ROWS) });
+  });
+  return pages;
+}
+function tvCourt(c, live){
+  const S = scoreOf(c, live), useSets = (c.rows || 1) >= 2 && (c.t || []).length < 3;
+  const big = useSets ? (t => [t.wa, t.wb])(sumSets(S.sets)) : S.sc;
+  return '<div class="cc"><div class="ct">' + esc(c.name) + '코트' + (c.label ? ' · ' + esc(c.label) : '') + '</div>' + (c.t || []).map((t, i) =>
+    '<div class="ln' + (S.done && big[i] === Math.max.apply(null, big) ? ' w' : '') + '"><span>' + (t || []).filter(Boolean).map(p => esc(p.n)).join(' · ') + '</span><b>' + (+big[i] || 0) + '</b></div>').join('') + '</div>';
+}
+function tvPaint(){
+  const data = lastData; if (!data) return;
+  const st = data.st || {}, pages = tvPages(st, data.live || {});
+  if (tvI >= pages.length) tvI = 0;
+  const pg = pages[tvI];
+  let body = '<div class="msg" style="color:#9aa3ad">저장된 경기가 생기면 순위가 나옵니다</div>';
+  if (pg && pg.kind === 'courts') body = '<div class="tc">' + st.courts.map(c => tvCourt(c, data.live || {})).join('') + '</div>';
+  if (pg && pg.kind === 'rank') body = '<div class="tb">' + pg.list.map((r, i) => { const no = pg.from + i + 1;
+    return '<div class="rk r' + no + '"><span class="no">' + no + '</span><span class="nm">' + esc(r.n) + '</span><span class="st"><b>' + r.w + '</b>승 ' + r.d + '무 ' + r.l + '패 · 득실 ' + (r.g > 0 ? '+' : '') + r.g + '</span></div>'; }).join('') + '</div>';
+  app.innerHTML = '<div class="tv"><div class="th"><b>' + esc(pg ? pg.title : clsLabel(st.cls)) + '</b><span>' + esc([clsLabel(st.cls), st.when].filter(Boolean).join(' · ')) + '</span><button class="tx" id="tvOff">나가기</button></div>' + body +
+    '<div class="dots">' + pages.map((p, i) => '<i class="' + (i === tvI ? 'on' : '') + '"></i>').join('') + '</div></div>';
+  document.getElementById('tvOff').onclick = tvOff;
+}
+function tvOn(){
+  TV = true; tvI = 0;
+  try { const el = document.documentElement; if (el.requestFullscreen) el.requestFullscreen().catch(() => {}); } catch(e){}
+  tvPaint(); clearInterval(tvT);
+  tvT = setInterval(() => { tvI++; tvPaint(); }, 10000);
+}
+function tvOff(){
+  TV = false; clearInterval(tvT);
+  try { if (document.fullscreenElement) document.exitFullscreen(); } catch(e){}
+  if (lastData) renderViewer(lastData);
 }
 
 /* ───────── 심판 ───────── */
@@ -306,14 +368,18 @@ async function tick(){
     } else if (COURT != null){
       lastData = d;
       if (!R.asking) refPaint();
-    } else renderViewer(d);
+    } else {
+      lastData = d;
+      if (TV){ if (!tvT) tvOn(); else tvPaint(); }
+      else renderViewer(d);
+    }
   }catch(e){
     if (++failN >= 2) toast('연결이 잠시 끊겼습니다 — 다시 시도 중');
     if (failN > 4) failN = 4;
   }
 }
 // 폰 관람은 8초, 큰 화면(TV)은 4초, 심판은 4초 — 조금씩 흩어서 한꺼번에 몰리지 않게, 끊기면 점점 길게 쉰다
-function period(){ return COURT != null ? 4000 : (window.innerWidth >= 900 ? 4000 : 8000); }
+function period(){ return (COURT != null || TV) ? 4000 : (window.innerWidth >= 900 ? 4000 : 8000); }
 async function loop(){
   await tick();
   const back = failN ? Math.min(30000, period() * Math.pow(2, failN)) : period();
